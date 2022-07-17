@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Записи сообщества {{ group.title }}{% endblock %} 
+{% block content %}
+<h1>{{ group.title }}</h1>
+<p>{{ group.description }}</p>`
+E       assert None
+{% for article in posts_on_page %}
+  <article>
+    <ul>
+      <li>
+        Автор: {{ article.author.get_full_name }}
+        <br>
+        <a href="{% url 'posts:profile' article.author.username %}">все посты пользователя</a>
+      </li>
+      <li>
+        Дата публикации: {{ article.pub_date|date:'j F Y' }}
+      </li>
+    </ul>      
+    <p>
+      {{ article.text }}
+    </p>
+    <a href="{% url 'posts:post_detail' article.id %}">подробная информация </a>
+  </article>
+{% if article.group %}   
+  <a href="{% url 'posts:group_list' article.group.slug %}">все записи группы</a>
+{% endif %}
+{% if not forloop.last %}
+  <hr>
+{% endif %}
+{% empty %}
+  <p>Здесь пока ничего не написано.</p>
+{% endfor %} 
+{% endblock %}

@@ -60,6 +60,7 @@ coverage.xml
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
+db.sqlite3:Zone.Identifier
 
 # Flask stuff:
 instance/
@@ -142,5 +143,4 @@ dmypy.json
 
 # Local History for Visual Studio Code
 .history/
-
 .mypy_cache
