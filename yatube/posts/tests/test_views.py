@@ -75,7 +75,7 @@ class PagesAndContext(TestCase):
                 self.assertEqual(test_post.author, self.post.author)
                 self.assertEqual(test_post.text, self.post.text)
                 self.assertEqual(test_post.group, self.post.group)
-                self.assertEqual(test_post.created, self.post.created)
+                self.assertEqual(test_post.pub_date, self.post.pub_date)
 
     def test_pages_with_one_post_show_correct_context(self):
         '''
