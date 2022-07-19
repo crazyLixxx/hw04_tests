@@ -85,7 +85,7 @@ class PagesAndContext(TestCase):
         test_objects = [
             (reverse(
                 'posts:post_detail', kwargs={'post_id': '1'}),
-                'article'),
+                'post'),
         ]
 
         for page, post in test_objects:
@@ -95,7 +95,7 @@ class PagesAndContext(TestCase):
                 self.assertEqual(test_post.author, self.post.author)
                 self.assertEqual(test_post.text, self.post.text)
                 self.assertEqual(test_post.group, self.post.group)
-                self.assertEqual(test_post.created, self.post.created)
+                self.assertEqual(test_post.pub_date, self.post.pub_date)
 
     def test_page_paginator(self):
         '''Тестируем, что пагинатор отдаёт корректное количество постов'''
