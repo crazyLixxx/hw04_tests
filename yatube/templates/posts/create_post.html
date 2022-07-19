@@ -19,21 +19,18 @@
         </div>
         <div class="card-body">
         {% include 'includes/django_form_errors.html' %}        
-          <form method="post" 
-            {% if action_url %}
-              action="{% url action_url %}"
-            {% endif %}>
-              {% include 'includes/django_forms.html' %}
-                <div class="d-flex justify-content-end">
-                  <button type="submit" class="btn btn-primary">
-                    {% if is_edit %}
-                      Сохранить
-                    {% else %}
-                      Добавить
-                    {% endif %}
-                  </button>
-                </div>
-          </form>
+        <form method="post" enctype="multipart/form-data">
+          {% include 'includes/django_forms.html' %}
+          <div class="d-flex justify-content-end">
+            <button type="submit" class="btn btn-primary">
+              {% if is_edit %}
+                Сохранить
+              {% else %}
+                Добавить
+              {% endif %}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </div>

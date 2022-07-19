@@ -1,23 +1,20 @@
+import http
+
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 
 from ..models import Group, Post
 
 User = get_user_model()
-CommonURLs = {
+PUBLIC_URLS = {
     '': 'posts/index.html',
     '/group/group_slug/': 'posts/group_list.html',
     '/profile/hanson/': 'posts/profile.html',
-    '/posts/1/': 'posts/post_detail.html',
+    '/posts/1/': 'posts/post_detail.html'
 }
-OnlyAuthorisedURLs = {
+PRIVAT_URLS = {
     '/create/': 'posts/create_post.html',
-}
-OnlyAuthorURLs = {
-    '/posts/1/edit/': 'posts/create_post.html',
-}
-UnexistingURLs = {
-    '/unexisting_page': '',
+    '/posts/1/edit/': 'posts/create_post.html'
 }
 
 
@@ -25,7 +22,6 @@ class DynamicURLTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        User.objects.create_user(username='tom')
         User.objects.create_user(username='hanson')
         Group.objects.create(
             title='Название группы',
@@ -39,74 +35,81 @@ class DynamicURLTests(TestCase):
 
     def setUp(self):
         self.guest_client = Client()
-        self.user_reader = User.objects.get(username='tom')
-        self.authorized_user_reader = Client()
-        self.authorized_user_reader.force_login(self.user_reader)
         self.user_author = User.objects.get(username='hanson')
         self.authorized_user_author = Client()
         self.authorized_user_author.force_login(self.user_author)
+        self.post = Post.objects.get(id=1)
 
-    def test_urls_exist_at_desired_location(self):
-        '''Проверка доступности страниц с учётом прав'''
-        test_sessions = [
-            ('неавторизованный пользователь на общедоступных страницах',
-                self.guest_client,
-                CommonURLs,
-                200),
-            ('неавторизованный пользователь на страницах для авторизованных',
-                self.guest_client,
-                OnlyAuthorisedURLs,
-                302),
-            ('неавторизованный пользователь пытается что-то сделать '
-                'с чужим постом',
-                self.guest_client,
-                OnlyAuthorURLs,
-                302),
-            ('неавторизованный пользователь на несуществующей странице ',
-                self.guest_client,
-                UnexistingURLs,
-                404),
-            ('авторизованный пользователь на общедоступных страницах',
-                self.authorized_user_reader,
-                CommonURLs,
-                200),
-            ('авторизованный пользователь на страницах для авторизованных',
-                self.authorized_user_reader,
-                OnlyAuthorisedURLs,
-                200),
-            ('авторизованный пользователь пытается что-то сделать '
-                'с чужим постом',
-                self.authorized_user_reader,
-                OnlyAuthorURLs,
-                302),
-            ('авторизованный пользователь на несуществующей странице ',
-                self.authorized_user_reader,
-                UnexistingURLs,
-                404),
-            ('авторизованный пользователь пытается что-то сделать '
-                'со своим постом',
-                self.authorized_user_author,
-                OnlyAuthorURLs,
-                200),
+    def test_urls_public_urls_available_for_all(self):
+        '''Проверяем, что публичные страницы доступны всем'''
+
+        for url in PUBLIC_URLS:
+            with self.subTest(url=url):
+                self.assertEqual(
+                    self.guest_client.get(url).status_code,
+                    http.HTTPStatus.OK
+                )
+
+    def test_privat_urls_not_available_for_guest_users(self):
+        '''Проверяем, что приватные страницы не доступны
+        неавторизованным пользователям'''
+
+        for url in PRIVAT_URLS:
+            with self.subTest(url=url):
+                self.assertRedirects(
+                    self.guest_client.get(url),
+                    '/auth/login/' + f'?next={url}',
+                    http.HTTPStatus.FOUND,
+                    http.HTTPStatus.OK
+                )
+
+    def test_privat_urls_available_for_authorised_users(self):
+        '''Проверяем, что приватные страницы доступны
+        авторизованным пользователям'''
+
+        for url in PRIVAT_URLS:
+            with self.subTest(url=url):
+                self.assertEqual(
+                    self.authorized_user_author.get(url).status_code,
+                    http.HTTPStatus.OK
+                )
+
+    def test_post_edit_available_only_for_author(self):
+        '''Проверяем, что редактирование поста доступно
+        только его автору'''
+        reader = User.objects.create(username='tom')
+        reader_authorized = Client()
+        reader_authorized.force_login(reader)
+
+        self.assertRedirects(
+            reader_authorized.get('/posts/1/edit/'),
+            '/posts/1/',
+            http.HTTPStatus.FOUND,
+            http.HTTPStatus.OK
+        )
+
+    def test_unexisting_page_are_unavailable(self):
+        '''Проверяем, что несуществующая страница отдаёт 404'''
+        unexisting_page = '/unexisting_page'
+        users = [
+            self.guest_client,
+            self.authorized_user_author
         ]
-        for test_case, user, pages, code in test_sessions:
-            for address in pages:
-                with self.subTest(address=address):
-                    self.assertEqual(
-                        user.get(address).status_code,
-                        code,
-                        f'Сценарий /{test_case}/ не проходит на'
-                        f'странице {address}'
-                    )
+
+        for user in users:
+            with self.subTest(user=user):
+                self.assertEqual(
+                    user.get(unexisting_page).status_code,
+                    http.HTTPStatus.NOT_FOUND
+                )
 
     def test_pages_uses_correct_template(self):
         '''Проверяем, что страницы используют правильный шаблон'''
-        test_sessions = [
-            CommonURLs,
-            OnlyAuthorisedURLs,
-            OnlyAuthorURLs
+        test_objects = [
+            PUBLIC_URLS,
+            PRIVAT_URLS,
         ]
-        for session in test_sessions:
+        for session in test_objects:
             for address, template in session.items():
                 with self.subTest(address=address):
                     response = self.authorized_user_author.get(address)
