@@ -70,10 +70,8 @@ class PagesAndContext(TestCase):
             ).context['post']
         ]
 
-        for page, posts in test_objects:
-            with self.subTest(page=page):
-                response = self.authorized_user_author.get(page)
-                test_post = response.context[posts][0]
+        for test_post in test_objects:
+            with self.subTest(test_post=test_post):
                 self.assertEqual(test_post.author, self.post.author)
                 self.assertEqual(test_post.text, self.post.text)
                 self.assertEqual(test_post.group, self.post.group)
