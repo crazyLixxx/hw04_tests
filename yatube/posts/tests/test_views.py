@@ -58,16 +58,23 @@ class PagesAndContext(TestCase):
 
         test_objects = [
             self.authorized_user_author.get(
-                reverse('posts:index')).context['page_obj'][0],
-            self.authorized_user_author.get(
-                reverse('posts:group_list', kwargs={'slug': 'group_slug'})
-            ).content['page_obj'][0],
-            self.authorized_user_author.get(
-                reverse('posts:profile', kwargs={'username': 'hanson'})
+                reverse('posts:index')
             ).context['page_obj'][0],
             self.authorized_user_author.get(
-                reverse('posts:post_detail', kwargs={'post_id': '1'})
-            ).context['post']
+                reverse(
+                    'posts:group_list',
+                    kwargs={'slug': 'group_slug'})
+            ).context['page_obj'][0],
+            self.authorized_user_author.get(
+                reverse(
+                    'posts:profile',
+                    kwargs={'username': 'hanson'})
+            ).context['page_obj'][0],
+            self.authorized_user_author.get(
+                reverse(
+                    'posts:post_detail',
+                    kwargs={'post_id': '1'})
+            ).context['article'],
         ]
 
         for test_post in test_objects:
