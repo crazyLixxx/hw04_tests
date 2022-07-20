@@ -53,45 +53,27 @@ class PagesAndContext(TestCase):
                 response = self.authorized_user_author.get(name)
                 self.assertTemplateUsed(response, template)
 
-    def test_pages_with_many_posts_show_correct_context(self):
-        '''
-        Тестируем элементы поста при выводе на страницах с несколькими постами
-        '''
+    def test_pages_with_posts_show_correct_context(self):
+        '''Тестируем элементы поста при выводе на страницах'''
 
         test_objects = [
-            (reverse('posts:index'), 'page_obj'),
-            (reverse(
-                'posts:group_list', kwargs={'slug': 'group_slug'}),
-                'page_obj'),
-            (reverse(
-                'posts:profile', kwargs={'username': 'hanson'}),
-                'page_obj'),
+            self.authorized_user_author.get(
+                reverse('posts:index')).context['page_obj'][0],
+            self.authorized_user_author.get(
+                reverse('posts:group_list', kwargs={'slug': 'group_slug'})
+            ).content['page_obj'][0],
+            self.authorized_user_author.get(
+                reverse('posts:profile', kwargs={'username': 'hanson'})
+            ).context['page_obj'][0],
+            self.authorized_user_author.get(
+                reverse('posts:post_detail', kwargs={'post_id': '1'})
+            ).context['post']
         ]
 
         for page, posts in test_objects:
             with self.subTest(page=page):
                 response = self.authorized_user_author.get(page)
                 test_post = response.context[posts][0]
-                self.assertEqual(test_post.author, self.post.author)
-                self.assertEqual(test_post.text, self.post.text)
-                self.assertEqual(test_post.group, self.post.group)
-                self.assertEqual(test_post.pub_date, self.post.pub_date)
-
-    def test_pages_with_one_post_show_correct_context(self):
-        '''
-        Тестируем элементы поста при выводе на страницах с одним постом
-        '''
-
-        test_objects = [
-            (reverse(
-                'posts:post_detail', kwargs={'post_id': '1'}),
-                'post'),
-        ]
-
-        for page, post in test_objects:
-            with self.subTest(page=page):
-                response = self.authorized_user_author.get(page)
-                test_post = response.context[post]
                 self.assertEqual(test_post.author, self.post.author)
                 self.assertEqual(test_post.text, self.post.text)
                 self.assertEqual(test_post.group, self.post.group)
