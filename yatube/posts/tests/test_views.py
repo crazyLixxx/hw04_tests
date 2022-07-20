@@ -74,7 +74,7 @@ class PagesAndContext(TestCase):
                 reverse(
                     'posts:post_detail',
                     kwargs={'post_id': '1'})
-            ).context['article'],
+            ).context['post'],
         ]
 
         for test_post in test_objects:
